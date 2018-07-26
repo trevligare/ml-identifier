@@ -1,0 +1,8 @@
+.DS_Store
+__pycache__
+dist/
+data/raw/
+data/swedish-gazetteers/
+data/tmp-output/training_gazetteers*.txt
+data/tmp-output/training_corenlp.txt
+data/tmp-output/unkown_LABEL_file.txt

@@ -1,0 +1,150 @@
+<?xml version="1.0"?>
+<!-- This file is an ANT build script. ANT is a Java based build tool. -->
+<!-- It is available from http://ant.apache.org                        -->
+<!-- ================================================================= -->
+<!-- NOTE: all directories are relative to trevligare-{version}/             -->
+<!-- ================================================================= -->
+<project name="trevligare" default="usage" basedir=".">
+  <!-- The build.properties file defines the path to local jar files -->
+  <property file="../build.properties"/>
+  <!-- Read the system environment variables and stores them in properties, -->
+  <!-- prefixed with "env". -->
+  <property environment="env"/>
+  <property name="version" value="1.0.0"/>
+  <!-- The base directory relative to which most targets are built -->
+  <property name="base" value="."/>
+  <property name="deprecation" value="on"/>
+  <property name="javac.target" value="1.8"/>
+  <property name="javac.debug" value="on"/>
+  <!-- The directory where source files are stored. -->
+  <property name="java.source.dir" value="src/"/>
+  <!-- distribution directory -->
+  <property name="dist.dir" value="dist/trevligare-${version}"/>
+  <!-- Destination for compiled files -->
+  <property name="javac.dest" value="${dist.dir}/classes"/>
+  <property name="dist.images" value="${dist.dir}/images"/>
+  <!-- Destination for generated jar files -->
+  <property name="jar.dest" value="${dist.dir}/lib"/>
+  <!-- The jar file that the jar task will generate -->
+  <property name="jar.filename" value="trevligare-${version}.jar"/>
+  <!-- Construct compile classpath -->
+  <path id="compile.classpath">
+    <pathelement location="${javac.dest}/classes"/>
+    <pathelement location="${libmaltparser.jar}"/>
+    <pathelement location="${libstanford-ner.jar}"/>
+    <pathelement location="${libstagger.jar}"/>
+    <pathelement location="${libsvm.jar}"/>
+    <pathelement location="${liblinear.jar}"/>
+    <pathelement location="${log4j.jar}"/>
+  </path>
+  <!-- ================================================================= -->
+  <!-- Default target                                                    -->
+  <!-- ================================================================= -->
+  <target name="usage">
+    <echo>
+
+    These are the targets supported by this ANT build scpript:
+
+    build   - compile all project files, if a certain library
+              is missing, then the compilation of its dependents
+              are skipped.
+    jar     - build trevligare-${version} jar files
+
+    dist    - will create a complete distribution in dist/
+
+    Properties of your system:
+
+    os.name:          ${os.name}
+    basedir:          ${basedir}
+    ant.file:         ${ant.file}
+    ant.project.name: ${ant.project.name}
+    ant.java.version: ${ant.java.version}
+    </echo>
+  </target>
+  <!-- ================================================================= -->
+  <!-- Initialize variables                                              -->
+  <!-- ================================================================= -->
+  <target name="init">
+    <tstamp/>
+    <property name="javac.includeAntRuntime" value="true"/>
+    <property name="javac.includeJavaRuntime" value="false"/>
+    <property name="javac.fork" value="false"/>
+  </target>
+  <target name="appdata">
+    <copy todir="${javac.dest}">
+      <fileset dir="${base}" includes="${appdata.src}/**"/>
+      <filterset>
+        <filter token="version" value="${version}"/>
+        <filter token="builddate" value="${TODAY}"/>
+      </filterset>
+    </copy>
+  </target>
+  <target name="build" depends="init,appdata">
+    <mkdir dir="${javac.dest}"/>
+    <javac srcdir="${java.source.dir}" destdir="${javac.dest}" includeAntRuntime="${javac.includeAntRuntime}" includeJavaRuntime="${javac.includeJavaRuntime}" fork="${javac.fork}" deprecation="${deprecation}" target="${javac.target}" debug="${javac.debug}">
+      <classpath refid="compile.classpath"/>
+    </javac>
+  </target>
+  <!-- ================================================================= -->
+  <!-- Remove all generated (compiled) class files.                      -->
+  <!-- ================================================================= -->
+  <target name="clean" depends="init">
+    <delete dir="${dist.dir}/"/>
+  </target>
+  <!-- ================================================================= -->
+  <!-- Create trevligare-${version}.jar												     -->
+  <!-- ================================================================= -->
+  <target name="jar" depends="prejar">
+    <delete>
+      <fileset dir="${jar.dest}">
+        <include name="*.jar"/>
+      </fileset>
+    </delete>
+    <copy file="${libstanford-ner.jar}" tofile="${jar.dest}/libstanford-ner.jar"/>
+    <copy file="${libmaltparser.jar}" tofile="${jar.dest}/libmaltparser.jar"/>
+    <copy file="${libstagger.jar}" tofile="${jar.dest}/libstagger.jar"/>
+    <copy file="${libsvm.jar}" tofile="${jar.dest}/libsvm.jar"/>
+    <copy file="${liblinear.jar}" tofile="${jar.dest}/liblinear.jar"/>
+    <copy file="${log4j.jar}" tofile="${jar.dest}/log4j.jar"/>
+    <jar jarfile="${dist.dir}/${jar.filename}" basedir="${javac.dest}" includes="**/*.class,appdata/**/*.*" manifest="${dist.dir}/MANIFEST.MF">
+      <metainf dir="." includes="LICENSE, NOTICE, README"/>
+      <zipgroupfileset dir="${jar.dest}" includes="**/*.jar" />
+    </jar>
+    <delete file="${dist.dir}/MANIFEST.MF"/>
+  </target>
+  <target name="prejar" depends="build">
+    <mkdir dir="${jar.dest}"/>
+    <filter token="version" value="${version}"/>
+    <manifest file="${dist.dir}/MANIFEST.MF">
+      <attribute name="Class-Path" value="lib/libstanford-ner.jar lib/libmaltparser.jar lib/libstagger.jar lib/libsvm.jar lib/liblinear.jar lib/log4j.jar"/>
+      <attribute name="Main-Class" value="org.trevligare.IsHateThreatSentence"/>
+      <attribute name="Implementation-Title" value="Trevligare"/>
+      <attribute name="Implementation-Version" value="${version}"/>
+      <attribute name="Implementation-Vendor" value="Johannes Lind&#xE9;n"/>
+      <attribute name="Build-Date" value="${TODAY}"/>
+    </manifest>
+  </target>
+  <!-- ================================================================= -->
+  <!-- Build a complete distribution. Results go to ${dist.images}       -->
+  <!-- ================================================================= -->
+  <target name="dist" depends="init, clean, jar">
+    <mkdir dir="${dist.images}"/>
+    <mkdir dir="${dist.tmp}/trevligare-${version}"/>
+    <copy todir="${dist.tmp}/trevligare-${version}">
+      <fileset dir="${base}" includes="src/**,       appdata/**,       lib/**,                      build.xml,                      build.properties,                      LICENSE,       NOTICE,       README"/>
+    </copy>
+    <copy todir="${dist.tmp}/trevligare-${version}">
+      <fileset dir="${base}" includes="examples/**"/>
+      <filterset>
+        <filter token="version" value="${version}"/>
+      </filterset>
+    </copy>
+    <copy todir="${dist.tmp}/trevligare-${version}">
+      <fileset dir="${dist.dir}" includes="docs/**"/>
+    </copy>
+    <copy file="${dist.dir}/trevligare-${version}.jar" tofile="${dist.tmp}/trevligare-${version}/trevligare-${version}.jar"/>
+    <tar tarfile="${dist.images}/trevligare-${version}.tar.gz" basedir="${dist.tmp}" includes="trevligare-${version}/**" compression="gzip"/>
+    <zip zipfile="${dist.images}/trevligare-${version}.zip" basedir="${dist.tmp}" includes="trevligare-${version}/**"/>
+    <delete dir="${dist.tmp}"/>
+  </target>
+</project>

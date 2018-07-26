@@ -1,0 +1,21 @@
+trainFileList = data/tmp-output/training_gazetteers_0.txt,data/tmp-output/training_gazetteers_1.txt,data/tmp-output/training_gazetteers_2.txt
+serializeTo = stanford-2018-02-27/classifiers/se-ner-model.ser.gz
+map = word=0,answer=1
+
+useClassFeature=true
+useWord=true
+useNGrams=true
+noMidNGrams=true
+maxNGramLeng=5
+usePrev=true
+useNext=true
+useSequences=true
+usePrevSequences=true
+maxLeft=1
+useTypeSeqs=true
+useTypeSeqs2=true
+useTypeySequences=true
+wordShape=chris2useLC
+useDisjunctive=true
+
+featureDiffThresh=0.05

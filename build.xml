@@ -68,7 +68,7 @@
     <tstamp/>
     <property name="javac.includeAntRuntime" value="true"/>
     <property name="javac.includeJavaRuntime" value="false"/>
-    <property name="javac.fork" value="false"/>
+    <property name="javac.fork" value="true"/>
   </target>
   <target name="appdata">
     <copy todir="${javac.dest}">
